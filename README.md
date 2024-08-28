@@ -1,4 +1,9 @@
-# bible-verse-quicklook
+# Bible Verse Quicklook 🔍
+
+### Features
+- 📖 Hover over a Bible verse or abbrevation to see it's full text.
+
+![](static/v0.0.1.png)
 
 ### Development
 

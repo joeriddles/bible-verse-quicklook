@@ -1,8 +1,10 @@
 import { Plugin } from 'obsidian';
+import { BookService, IBookService } from 'src/bookService';
 import { Verse } from 'src/entities';
 import { DEFAULT_SETTINGS, Settings, SettingsTab } from 'src/settings';
-import { VerseService } from 'src/verseService';
+import { BibleApiVerseService, IVerseService } from 'src/verseService';
 
+/** ✨ This is where the magic happens ✨ */
 const VERSE_PATTERN = /(?<book>\d?\w{2,3}) (?<chapter>\d{1,3}):(?<verseStart>\d{1,3})([-–—]?(?<verseEnd>\d{1,3}))?/gi
 
 export default class BibleVerseQuicklookPlugin extends Plugin {
@@ -11,8 +13,12 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings()
 
-		const verseService = new VerseService();
+		const bookService: IBookService = new BookService();
+		const verseService: IVerseService = new BibleApiVerseService();
 
+		// TODO: add support for editing mode, too?
+
+		// TODO: refactor this big boy
 		this.registerMarkdownPostProcessor(async (element, context) => {
 			const lines = element.findAll("p")
 			for (const line of lines) {
@@ -33,11 +39,18 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 							throw new Error(`impossible: ${line}`)
 						}
 
+						const bookAbbreviation = match.groups.book
+						const book = bookService.lookupBookByAbbreviation(bookAbbreviation)
+						if (book == null) {
+							console.warn(`Could not find matching book for abbreviation: ${bookAbbreviation}`)
+							continue
+						}
+
 						const verse = {
-							book: match.groups.book,
+							book,
 							chapter: Number.parseInt(match.groups.chapter),
 							verseStart: Number.parseInt(match.groups.verseStart),
-							verseEnd: match.groups.verseEnd	? Number.parseInt(match.groups.verseEnd) : undefined,
+							verseEnd: match.groups.verseEnd ? Number.parseInt(match.groups.verseEnd) : undefined,
 						} as Verse
 						console.log(verse)
 
@@ -47,6 +60,8 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 							text,
 							attr: {
 								"style": "text-decoration: underline dotted;",
+								// TODO: move this to on hover so we don't overwhelm the API and
+								// blocked or rate-limited.
 								"title": await verseService.lookupVerse(verse),
 							}
 						})
@@ -68,6 +83,4 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings)
 	}
-
 }
-

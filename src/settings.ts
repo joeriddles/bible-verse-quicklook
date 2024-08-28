@@ -1,12 +1,13 @@
-import { App, Plugin, PluginSettingTab } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Settings {
+  APIBibleKey?: string,
   
 }
 
 const DEFAULT_SETTINGS: Settings = {
-  
+  APIBibleKey: undefined,
 }
 
 interface IPlugin extends Plugin {
@@ -30,14 +31,14 @@ class SettingsTab extends PluginSettingTab {
     containerEl.empty()
     this.containerEl.createEl("h2", { text: "Bible Verse Quicklook" });
 
-    // new Setting(containerEl)
-    //   .setName('TODO filename')
-    //   .addText(text => text
-    //     .setValue(this.plugin.settings.todoFilename)
-    //     .onChange(async (value) => {
-    //       this.plugin.settings.todoFilename = value
-    //       await this.plugin.saveSettings()
-    //     }))
+    new Setting(containerEl)
+      .setName('API.Bible Key')
+      .addText(text => text
+        .setValue(this.plugin.settings.APIBibleKey ?? "")
+        .onChange(async (value) => {
+          this.plugin.settings.APIBibleKey = value
+          await this.plugin.saveSettings()
+        }))
   }
 }
 
