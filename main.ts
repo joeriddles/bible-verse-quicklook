@@ -55,16 +55,38 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 						console.log(verse)
 
 						newLine.innerHTML += html.substring(prevEnd, start)
+						newLine.dataset.verse = JSON.stringify(book)
 						prevEnd = end
+						const onmouseover = `if (this.dataset.loaded !== "true") {
+	this.dataset.loaded = "true";
+	${verseService.getLookVerseString(verse)}
+	const verse = JSON.parse(this.dataset.verse);
+	lookupVerse(verse).then(title => this.title = title);
+}`
 						newLine.createSpan({
 							text,
 							attr: {
 								"style": "text-decoration: underline dotted;",
-								// TODO: move this to on hover so we don't overwhelm the API and
-								// blocked or rate-limited.
-								"title": await verseService.lookupVerse(verse),
+								"title": "Loading...",
+								"data-loaded": "false",
+								"data-verse": JSON.stringify({ verse }),
+								"onmouseover": onmouseover,
 							}
-						})
+						}
+							// TODO: this does not work...
+							// , (span) => {
+							// 	span.onmouseover = () => {
+							// 		console.log("onmouseover")
+							// 		if (span.dataset.loaded !== "true") {
+							// 			span.dataset.loaded = "true"
+							// 			verseService.lookupVerse(verse).then(title => {
+							// 				span.title = title
+							// 				console.log(title)
+							// 			})
+							// 		}
+							// 	}
+							// }
+						)
 					}
 
 					newLine.innerHTML += html.substring(end)

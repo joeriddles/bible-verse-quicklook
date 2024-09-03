@@ -2,6 +2,7 @@ import { Verse } from "./entities"
 
 interface IVerseService {
   lookupVerse(verse: Verse): Promise<string>
+  getLookVerseString(verse: Verse): string
 }
 
 /**
@@ -16,6 +17,11 @@ class ApiDotBibleVerseService implements IVerseService {
   }
 
   lookupVerse(verse: Verse): Promise<string> {
+    // TODO
+    throw new Error("Method not implemented.")
+  }
+
+  getLookVerseString(verse: Verse): string {
     // TODO
     throw new Error("Method not implemented.")
   }
@@ -36,6 +42,19 @@ class BibleApiVerseService implements IVerseService {
       verses: { text: string }[],
     }
     return json.verses[0].text.trim()
+  }
+
+  getLookVerseString(verse: Verse): string {
+    return `
+const lookupVerse = async (verse) => {
+  const response = await fetch("https://bible-api.com/${verse.book} ${verse.chapter}:${verse.verseStart}");
+  if (!response.ok) {
+    throw new Error();
+  }
+  const json = await response.json();
+  return json.verses[0].text.trim();
+};
+`
   }
 }
 
