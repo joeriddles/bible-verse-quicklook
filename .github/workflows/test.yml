@@ -21,4 +21,4 @@ jobs:
       - name: Run tests
         run: |
           npm install -D
-          npm run test --passWithNoTests
+          npm run test
