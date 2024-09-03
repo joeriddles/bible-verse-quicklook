@@ -1,7 +1,7 @@
 {
 	"id": "bible-verse-quicklook",
 	"name": "Bible Verse Quicklook 🔍",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"minAppVersion": "0.15.0",
 	"description": "Show Bible verses on hover.",
 	"author": "joeriddles",
