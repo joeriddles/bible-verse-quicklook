@@ -7,6 +7,9 @@
 
 ### Development
 
+> [!NOTE]  
+> Bible book abbreviations are generated using the Python script found in the `abbreviation_generator` folder.
+
 To get started, set up your local dev environment by following steps 1–3 in the [official Obsidian docs for building a plugin](https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin#Step+1+Download+the+sample+plugin).
 
 Basically, the steps look like this:
