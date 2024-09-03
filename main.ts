@@ -31,7 +31,7 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 					let prevEnd = -1;
 
 					for (const match of matches) {
-						const start = match.index
+						const start = match.index ?? 0
 						end = start + match[0].length
 						const text = html.slice(start, end)
 
