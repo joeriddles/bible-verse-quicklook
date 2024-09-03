@@ -1,6 +1,6 @@
 {
 	"name": "bible-verse-quicklook",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "Show Bible verses on hover.",
 	"main": "main.js",
 	"scripts": {
