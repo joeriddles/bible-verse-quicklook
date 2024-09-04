@@ -3,6 +3,7 @@ interface Verse {
   chapter: number
   verseStart: number
   verseEnd?: number
+  text?: string,
 }
 
 export type { Verse }
