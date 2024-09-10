@@ -34,10 +34,16 @@ class VaultFileService implements VaultFileService {
   }
 
   async readFile(file: IFile): Promise<string> {
-    return await this.vault.cachedRead(file as TFile)
+    if (!(file instanceof TFile)) {
+      throw new Error('file is not a TFile instance')
+    }
+    return await this.vault.cachedRead(file)
   }
 
   async updateFile(file: IFile, data: string): Promise<void> {
+    if (!(file instanceof TFile)) {
+      throw new Error('file is not a TFile instance')
+    }
     await this.vault.modify(file as TFile, data)
   }
 
