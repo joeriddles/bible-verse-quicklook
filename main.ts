@@ -23,33 +23,43 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 			const elems = ["p", "li"]
 
 			for (const elem of elems) {
-				const lines = element.findAll(elem)
+				const lines = element.findAll(elem);
 				for (const line of lines) {
-					const html = line.innerHTML;
-					const matches = [...html.matchAll(VERSE_PATTERN)]
-					if (matches) {
+					const childNodes = Array.from(line.childNodes);
+					const matches = [];
 
+					// Iterate over all text nodes to find matches
+					for (const node of childNodes) {
+						if (node.nodeType === Node.TEXT_NODE) {
+							const nodeText = node.textContent ?? '';
+							const nodeMatches = [...nodeText.matchAll(VERSE_PATTERN)];
+							if (nodeMatches.length > 0) {
+								matches.push(...nodeMatches.map(match => ({ match, node })));
+							}
+						}
+					}
+
+					if (matches.length > 0) {
 						// Cheating here to bypass HTMLElementTagNameMap requirement:
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const newElem = createEl(elem as any)
+						const newElem = createEl(elem as any);
 
-						let end = -1;
-						let prevEnd = -1;
+						let prevEnd = 0;
 
-						for (const match of matches) {
-							const start = match.index ?? 0
-							end = start + match[0].length
-							const text = html.slice(start, end)
+						for (const { match, node } of matches) {
+							const start = match.index ?? 0;
+							const end = start + match[0].length;
+							const text = node.textContent?.slice(start, end) ?? '';
 
 							if (!match.groups) {
-								throw new Error(`impossible: ${line}`)
+								throw new Error(`impossible: ${line}`);
 							}
 
-							const bookAbbreviation = match.groups.book
-							const book = bookService.lookupBookByAbbreviation(bookAbbreviation)
+							const bookAbbreviation = match.groups.book;
+							const book = bookService.lookupBookByAbbreviation(bookAbbreviation);
 							if (book == null) {
-								console.warn(`Could not find matching book for abbreviation: ${bookAbbreviation}`)
-								continue
+								console.warn(`Could not find matching book for abbreviation: ${bookAbbreviation}`);
+								continue;
 							}
 
 							const verse = {
@@ -57,12 +67,23 @@ export default class BibleVerseQuicklookPlugin extends Plugin {
 								chapter: Number.parseInt(match.groups.chapter),
 								verseStart: Number.parseInt(match.groups.verseStart),
 								verseEnd: match.groups.verseEnd ? Number.parseInt(match.groups.verseEnd) : undefined,
-							} as Verse
-							console.log(verse)
+							} as Verse;
 
-							newElem.innerHTML += html.substring(prevEnd, start)
-							newElem.dataset.verse = JSON.stringify(book)
-							prevEnd = end
+							console.log(verse);
+
+							// Append the text before the current match
+							if (prevEnd < start) {
+								newElem.appendChild(document.createTextNode(node.textContent?.substring(prevEnd, start) ?? ''));
+							}
+
+							// Create a span element with attributes
+							const span = document.createElement('span');
+							span.textContent = text;
+							span.style.textDecoration = 'underline dotted';
+							span.title = 'Loading...';
+							span.dataset.loaded = 'false';
+							span.dataset.verse = JSON.stringify({ verse });
+
 							const onmouseover = `
 if (this.dataset.loaded !== "true") {
 	const verse = JSON.parse(this.dataset.verse);
@@ -78,37 +99,23 @@ if (this.dataset.loaded !== "true") {
 			localStorage.setItem("bible-verse-quicklook:${verse.book}:${verse.chapter}:${verse.verseStart}", title);
 		});
 	}
-}`
-							newElem.createSpan({
-								text,
-								attr: {
-									"style": "text-decoration: underline dotted;",
-									"title": "Loading...",
-									"data-loaded": "false",
-									"data-verse": JSON.stringify({ verse }),
-									"onmouseover": onmouseover,
-								}
-							}
-								// TODO: this does not work...
-								// , (span) => {
-								// 	span.onmouseover = () => {
-								// 		console.log("onmouseover")
-								// 		if (span.dataset.loaded !== "true") {
-								// 			span.dataset.loaded = "true"
-								// 			verseService.lookupVerse(verse).then(title => {
-								// 				span.title = title
-								// 				console.log(title)
-								// 			})
-								// 		}
-								// 	}
-								// }
-							)
-						}
+}`;
+							span.setAttribute('onmouseover', onmouseover);
+							newElem.appendChild(span);
 
-						newElem.innerHTML += html.substring(end)
-						line.replaceWith(newElem)
+							prevEnd = end;
+
+							// Append the remaining text after the last match
+							if (prevEnd < (node.textContent?.length ?? 0)) {
+								newElem.appendChild(document.createTextNode(node.textContent?.substring(prevEnd) ?? ''));
+							}
+
+							// Replace the old node with the new element
+							line.replaceWith(newElem);
+						}
 					}
 				}
+
 			}
 		})
 
